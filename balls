@@ -1,0 +1,146 @@
+// Challenge 6: FUNctions!
+// By Colin Suckow and Randall Kincaid-Shatto
+// Simulate hundreds of marbles that can be reset,
+// paused, slowed down, and move in wavy ways.
+
+final color BACKGROUND_COLOR = color(255);
+final float ACCELERATION = 0.3;
+final float DAMPING = -0.5;
+final String BACKGROUND_IMAGE_FILE = "moonBackground.png";
+int numberOfMarbles = 100;
+
+boolean pauseToggle = false;
+boolean slowToggle = false;
+boolean squiggleToggle = false;
+
+PImage backgroundImage;
+
+float[] xCoordinates = new float[numberOfMarbles];
+float[] yCoordinates = new float[numberOfMarbles];
+float[] xVelocities = new float[numberOfMarbles];
+float[] yVelocities = new float[numberOfMarbles];
+float[] sizes = new float[numberOfMarbles];
+color[] colors = new color[numberOfMarbles];
+
+void setup() {
+  size(1200, 900);
+  loadBackgroundImage();
+  prepareMarbles(width/2, height/4);
+}
+
+void prepareMarbles(int startX, int startY) {
+  pauseToggle = false;
+  slowToggle = false;
+  squiggleToggle = false;
+  frameRate(60);
+  // Initialize the marbles
+  for (int i = 0; i < numberOfMarbles; ++i) {
+    xCoordinates[i] = random(startX - 100, startX + 100);
+    yCoordinates[i] = random(startY - 100, startY + 100);
+    xVelocities[i] = random(-5, 5);
+    yVelocities[i] = random(-10, -2);
+    sizes[i] = random(10, 40);
+    colors[i] = color(random(50, 210));
+  }
+}
+
+void draw() {
+  background(backgroundImage);
+   // Draw and move the marbles
+   for (int i = 0; i < numberOfMarbles; ++i) {
+     drawMarble(i);
+   }
+   drawInstructionsText();
+}
+//Draw the marble identified given index
+void drawMarble(int i) {
+  // Draw
+  fill(colors[i]);
+  ellipse(xCoordinates[i], yCoordinates[i], sizes[i], sizes[i]);
+  
+  //Check if paused
+  if(!pauseToggle){
+    // Move
+    xCoordinates[i] += xVelocities[i];
+    yCoordinates[i] += yVelocities[i];
+    yVelocities[i] += ACCELERATION;
+    if (squiggleToggle){
+    xCoordinates[i] += sin(frameCount)*10; 
+    }
+  }
+  
+  // Handle bouncing off bottom
+  if (yCoordinates[i] + sizes[i] / 2 >= height) {
+    yCoordinates[i] = height - sizes[i] / 2;
+    yVelocities[i] *= DAMPING;
+  }
+  // Handle bouncing off right
+  if (xCoordinates[i] + sizes[i] / 2 >= width) {
+    xCoordinates[i] = width - sizes[i] / 2;
+    xVelocities[i] *= DAMPING;
+  }
+  // Handle bouncing off left
+  if (xCoordinates[i] - sizes[i] / 2 <= 0) {
+    xCoordinates[i] = sizes[i] / 2;
+    xVelocities[i] *= DAMPING;
+  }
+
+}
+
+void mousePressed() {
+  //Reset marble position and modes
+  prepareMarbles(mouseX, mouseY);
+}
+
+void slow(boolean enable) {
+  //Change framerate based on input argument
+  if (enable) {
+    frameRate(10);
+  } else {
+    frameRate(60);
+  }
+}
+
+void keyPressed() {
+  if (key == 's') {
+    slowToggle = !slowToggle;
+    slow(slowToggle);
+  }
+  
+  if (key == 'p') {
+    pauseToggle = !pauseToggle;
+  }
+  //Check both the normal and alternate keys, because the tilde key is actually a ` key.
+  if (key == '`' || key == '~') {
+    squiggleToggle = !squiggleToggle;
+    println(squiggleToggle);
+  }
+    if (key == '+' || key == '=') {
+    numberOfMarbles += 1;
+    float[] xCoordinates = new float[numberOfMarbles];
+    prepareMarbles(height/2, width/2);
+    setup();
+  }
+    if (key == '-' || key == '_') {
+    numberOfMarbles -= 1;
+    prepareMarbles(height/2, width/2);
+    setup();
+    
+  }
+}
+
+
+void drawInstructionsText() {
+  fill(255);
+  textSize(20);
+  text("P : Pause", 10, 20);
+  text("S : Slow motion", 10, 40);
+  text("Left Mouse : Reset to mouse position", 10, 60);
+  text("~ : Squiggle mode", 10, 80);
+  text("+ or - to change number of marbles", 10, 100);
+  text("current number: " + numberOfMarbles, 10, 120);
+}
+
+void loadBackgroundImage() {
+  backgroundImage = loadImage(BACKGROUND_IMAGE_FILE);
+}
